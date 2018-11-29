@@ -230,7 +230,7 @@ class Network(object):
       self._anchors = anchors
       self._anchor_length = anchor_length
 
-  def _build_network(self, is_training=True):
+  def _build_network(self, is_training=True):                #着重看这里
     # select initializers
     if cfg.TRAIN.TRUNCATED:
       initializer = tf.truncated_normal_initializer(mean=0.0, stddev=0.01)
