@@ -25,7 +25,7 @@ class vgg16(Network):
 
   def _image_to_head(self, is_training, reuse=None):
     with tf.variable_scope(self._scope, self._scope, reuse=reuse):
-      net = slim.repeat(self._image, 2, slim.conv2d, 64, [3, 3],
+      net = slim.repeat(self._image, 2, slim.conv2d, 64, [3, 3],             #slim.repeat重复操作，两个卷积层
                           trainable=False, scope='conv1')
       net = slim.max_pool2d(net, [2, 2], padding='SAME', scope='pool1')
       net = slim.repeat(net, 2, slim.conv2d, 128, [3, 3],
