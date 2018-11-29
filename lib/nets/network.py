@@ -384,10 +384,10 @@ class Network(object):
     raise NotImplementedError
 
   def create_architecture(self, mode, num_classes, tag=None,
-                          anchor_scales=(8, 16, 32), anchor_ratios=(0.5, 1, 2)):
+                          anchor_scales=(8, 16, 32), anchor_ratios=(0.5, 1, 2)):    #构建框架，在trainval.py中用到
     self._image = tf.placeholder(tf.float32, shape=[1, None, None, 3])
     self._im_info = tf.placeholder(tf.float32, shape=[3])
-    self._gt_boxes = tf.placeholder(tf.float32, shape=[None, 5])
+    self._gt_boxes = tf.placeholder(tf.float32, shape=[None, 5])            #gt的值，4个位置，1个类别
     self._tag = tag
 
     self._num_classes = num_classes
@@ -417,7 +417,7 @@ class Network(object):
                     slim.conv2d_transpose, slim.separable_conv2d, slim.fully_connected], 
                     weights_regularizer=weights_regularizer,
                     biases_regularizer=biases_regularizer, 
-                    biases_initializer=tf.constant_initializer(0.0)): 
+                    biases_initializer=tf.constant_initializer(0.0)):   #slim.arg_scope常用于为tensorflow里的layer函数提供默认值以使构建模型的代码更加紧凑苗条(slim):
       rois, cls_prob, bbox_pred = self._build_network(training)
 
     layers_to_output = {'rois': rois}
@@ -426,13 +426,13 @@ class Network(object):
       self._train_summaries.append(var)
 
     if testing:
-      stds = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self._num_classes))
+      stds = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self._num_classes))        #np.tile用来复制数组
       means = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS), (self._num_classes))
       self._predictions["bbox_pred"] *= stds
       self._predictions["bbox_pred"] += means
     else:
       self._add_losses()
-      layers_to_output.update(self._losses)
+      layers_to_output.update(self._losses)             #往layers_to_output字典里加键值对
 
       val_summaries = []
       with tf.device("/cpu:0"):
