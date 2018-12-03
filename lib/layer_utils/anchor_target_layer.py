@@ -58,13 +58,13 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
   if not cfg.TRAIN.RPN_CLOBBER_POSITIVES:
     # assign bg labels first so that positive labels can clobber them
     # first set the negatives
-    labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0
+    labels[max_overlaps < cfg.TRAIN.RPN_NEGATIVE_OVERLAP] = 0           #每个anchor和所有gt的最大交并比，和阈值进行比较，小于阈值则认为是背景
 
   # fg label: for each gt, anchor with highest overlap
-  labels[gt_argmax_overlaps] = 1
+  labels[gt_argmax_overlaps] = 1     #每个gt与anchor的最大交并比作为前景
 
   # fg label: above threshold IOU
-  labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1
+  labels[max_overlaps >= cfg.TRAIN.RPN_POSITIVE_OVERLAP] = 1    #每个anchor与gt的最大交并比大于阈值的作为前景
 
   if cfg.TRAIN.RPN_CLOBBER_POSITIVES:
     # assign bg labels last so that negative labels can clobber positives
@@ -79,12 +79,12 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
     labels[disable_inds] = -1
 
   # subsample negative labels if we have too many
-  num_bg = cfg.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)
+  num_bg = cfg.TRAIN.RPN_BATCHSIZE - np.sum(labels == 1)               #RPN_BATCHSIZE=256
   bg_inds = np.where(labels == 0)[0]
   if len(bg_inds) > num_bg:
     disable_inds = npr.choice(
       bg_inds, size=(len(bg_inds) - num_bg), replace=False)
-    labels[disable_inds] = -1
+    labels[disable_inds] = -1                                      #因为前景比较少，为了让背景不太多，将在所有背景中挑出256-前景个背景作为训练，其他标为-1，不参加训练。
 
   bbox_targets = np.zeros((len(inds_inside), 4), dtype=np.float32)
   bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])
