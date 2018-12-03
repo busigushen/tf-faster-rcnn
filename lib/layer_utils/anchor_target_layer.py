@@ -47,10 +47,10 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
   # overlaps (ex, gt)
   overlaps = bbox_overlaps(
     np.ascontiguousarray(anchors, dtype=np.float),
-    np.ascontiguousarray(gt_boxes, dtype=np.float))
-  argmax_overlaps = overlaps.argmax(axis=1)
+    np.ascontiguousarray(gt_boxes, dtype=np.float))      #返回每个anchor与gt的交并比，1列是一个gt，一行是一个anchor
+  argmax_overlaps = overlaps.argmax(axis=1)       #找出每行的最大值，就是与每个anchor最接近的gt
   max_overlaps = overlaps[np.arange(len(inds_inside)), argmax_overlaps]
-  gt_argmax_overlaps = overlaps.argmax(axis=0)
+  gt_argmax_overlaps = overlaps.argmax(axis=0)         #找出每列最大值，与每个gt最接近的anchor
   gt_max_overlaps = overlaps[gt_argmax_overlaps,
                              np.arange(overlaps.shape[1])]
   gt_argmax_overlaps = np.where(overlaps == gt_max_overlaps)[0]
