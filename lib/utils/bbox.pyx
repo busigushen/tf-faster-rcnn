@@ -52,5 +52,5 @@ def bbox_overlaps(
                         box_area - iw * ih
                     )
                     overlaps[n, k] = iw * ih / ua
-    return overlaps
+    return overlaps               #返回每个anchor与gt的交并比
 
