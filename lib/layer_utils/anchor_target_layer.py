@@ -17,6 +17,7 @@ from model.bbox_transform import bbox_transform
 
 def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anchors, num_anchors):
   """Same as the anchor target layer in original Fast/er RCNN """
+  #https://blog.csdn.net/l297969586/article/details/78026413
   A = num_anchors
   total_anchors = all_anchors.shape[0]
   K = total_anchors / num_anchors
@@ -27,7 +28,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
   # map of shape (..., H, W)
   height, width = rpn_cls_score.shape[1:3]
 
-  # only keep anchors inside the image
+  # only keep anchors inside the image    np.where返回的是tuple。所以腰输出第一维，是一个索引值的向量
   inds_inside = np.where(
     (all_anchors[:, 0] >= -_allowed_border) &
     (all_anchors[:, 1] >= -_allowed_border) &
