@@ -341,7 +341,7 @@ class Network(object):
       rpn_labels = self._anchor_target_layer(rpn_cls_score, "anchor")       #这个是计算输出是用来作为训练的参考的，上面的是网络的输出，这个是训练样本
       # Try to have a deterministic order for the computing graph, for reproducibility
       with tf.control_dependencies([rpn_labels]):
-        rois, _ = self._proposal_target_layer(rois, roi_scores, "rpn_rois")
+        rois, _ = self._proposal_target_layer(rois, roi_scores, "rpn_rois")       #这个是将前面网络求出来的2000个bounding box坐标和gt比较，筛选出来的关于类别的roi
     else:
       if cfg.TEST.MODE == 'nms':
         rois, _ = self._proposal_layer(rpn_cls_prob, rpn_bbox_pred, "rois")
