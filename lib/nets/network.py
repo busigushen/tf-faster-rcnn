@@ -166,6 +166,7 @@ class Network(object):
         [rpn_cls_score, self._gt_boxes, self._im_info, self._feat_stride, self._anchors, self._num_anchors],
         [tf.float32, tf.float32, tf.float32, tf.float32],
         name="anchor_target")
+      #这里rpn_cls_score只用了一个尺度
 
       rpn_labels.set_shape([1, 1, None, None])
       rpn_bbox_targets.set_shape([1, None, None, self._num_anchors * 4])
@@ -337,7 +338,7 @@ class Network(object):
                                 padding='VALID', activation_fn=None, scope='rpn_bbox_pred')
     if is_training:
       rois, roi_scores = self._proposal_layer(rpn_cls_prob, rpn_bbox_pred, "rois")    #返回2000×5的bounding box，和2000×1的score
-      rpn_labels = self._anchor_target_layer(rpn_cls_score, "anchor")
+      rpn_labels = self._anchor_target_layer(rpn_cls_score, "anchor")       #这个是计算输出是用来作为训练的参考的，上面的是网络的输出，这个是训练样本
       # Try to have a deterministic order for the computing graph, for reproducibility
       with tf.control_dependencies([rpn_labels]):
         rois, _ = self._proposal_target_layer(rois, roi_scores, "rpn_rois")
