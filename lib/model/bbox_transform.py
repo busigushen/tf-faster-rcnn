@@ -15,16 +15,16 @@ def bbox_transform(ex_rois, gt_rois):
   ex_widths = ex_rois[:, 2] - ex_rois[:, 0] + 1.0
   ex_heights = ex_rois[:, 3] - ex_rois[:, 1] + 1.0
   ex_ctr_x = ex_rois[:, 0] + 0.5 * ex_widths
-  ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights
+  ex_ctr_y = ex_rois[:, 1] + 0.5 * ex_heights             #ex_box的长宽，中心坐标
 
   gt_widths = gt_rois[:, 2] - gt_rois[:, 0] + 1.0
   gt_heights = gt_rois[:, 3] - gt_rois[:, 1] + 1.0
   gt_ctr_x = gt_rois[:, 0] + 0.5 * gt_widths
-  gt_ctr_y = gt_rois[:, 1] + 0.5 * gt_heights
+  gt_ctr_y = gt_rois[:, 1] + 0.5 * gt_heights             #gt_box的长宽，中心坐标
 
-  targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths
+  targets_dx = (gt_ctr_x - ex_ctr_x) / ex_widths            #gt相对于ex的坐标中心的偏移，因为我们在计算的时候是知道ex值，求gt
   targets_dy = (gt_ctr_y - ex_ctr_y) / ex_heights
-  targets_dw = np.log(gt_widths / ex_widths)
+  targets_dw = np.log(gt_widths / ex_widths)         #gt相对于ex坐标长宽的便宜
   targets_dh = np.log(gt_heights / ex_heights)
 
   targets = np.vstack(
