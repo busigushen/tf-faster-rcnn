@@ -87,11 +87,12 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
     labels[disable_inds] = -1                                      #因为前景比较少，为了让背景不太多，将在所有背景中挑出256-前景个背景作为训练，其他标为-1，不参加训练。
 
   bbox_targets = np.zeros((len(inds_inside), 4), dtype=np.float32)
-  bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])
-
+  bbox_targets = _compute_targets(anchors, gt_boxes[argmax_overlaps, :])              #输入，所有坐标在范围内的anchor，和每个anchor对应的交并比最大的gt
+#计算了所有anchor与对应gt的偏差，没有分是不是前景背景或不参加训练
+  
   bbox_inside_weights = np.zeros((len(inds_inside), 4), dtype=np.float32)
   # only the positive ones have regression targets
-  bbox_inside_weights[labels == 1, :] = np.array(cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS)
+  bbox_inside_weights[labels == 1, :] = np.array(cfg.TRAIN.RPN_BBOX_INSIDE_WEIGHTS)     #把正样本的位置上的值都置位1
 
   bbox_outside_weights = np.zeros((len(inds_inside), 4), dtype=np.float32)
   if cfg.TRAIN.RPN_POSITIVE_WEIGHT < 0:
@@ -109,14 +110,14 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
   bbox_outside_weights[labels == 1, :] = positive_weights
   bbox_outside_weights[labels == 0, :] = negative_weights
 
-  # map up to original set of anchors
-  labels = _unmap(labels, total_anchors, inds_inside, fill=-1)
-  bbox_targets = _unmap(bbox_targets, total_anchors, inds_inside, fill=0)
+  # map up to original set of anchors  把一开始删除的项都加进去了
+  labels = _unmap(labels, total_anchors, inds_inside, fill=-1)     #label是1维的
+  bbox_targets = _unmap(bbox_targets, total_anchors, inds_inside, fill=0)   #bbox_targets是2维，第二维尺度是4
   bbox_inside_weights = _unmap(bbox_inside_weights, total_anchors, inds_inside, fill=0)
   bbox_outside_weights = _unmap(bbox_outside_weights, total_anchors, inds_inside, fill=0)
 
   # labels
-  labels = labels.reshape((1, height, width, A)).transpose(0, 3, 1, 2)
+  labels = labels.reshape((1, height, width, A)).transpose(0, 3, 1, 2)    #将1维变四维，A=9每个位置有9个anchor，transpose后将每类anchor放一堆
   labels = labels.reshape((1, 1, A * height, width))
   rpn_labels = labels
 
@@ -139,7 +140,7 @@ def anchor_target_layer(rpn_cls_score, gt_boxes, im_info, _feat_stride, all_anch
   return rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights
 
 
-def _unmap(data, count, inds, fill=0):
+def _unmap(data, count, inds, fill=0):   #把筛选出来后的值放回原来的所有anchor中，其他被筛掉的标记为-1
   """ Unmap a subset of item (data) back to the original set of items (of
   size count) """
   if len(data.shape) == 1:
@@ -147,7 +148,7 @@ def _unmap(data, count, inds, fill=0):
     ret.fill(fill)
     ret[inds] = data
   else:
-    ret = np.empty((count,) + data.shape[1:], dtype=np.float32)
+    ret = np.empty((count,) + data.shape[1:], dtype=np.float32)   #tunple的加法，不是在数字加减是多加了一项
     ret.fill(fill)
     ret[inds, :] = data
   return ret
