@@ -27,7 +27,7 @@ def proposal_target_layer(rpn_rois, rpn_scores, gt_boxes, _num_classes):
   all_scores = rpn_scores
 
   # Include ground-truth boxes in the set of candidate rois
-  if cfg.TRAIN.USE_GT:
+  if cfg.TRAIN.USE_GT:               #是否使用gt，如果用就把gt加入到all_rois中
     zeros = np.zeros((gt_boxes.shape[0], 1), dtype=gt_boxes.dtype)
     all_rois = np.vstack(
       (all_rois, np.hstack((zeros, gt_boxes[:, :-1])))
@@ -36,7 +36,7 @@ def proposal_target_layer(rpn_rois, rpn_scores, gt_boxes, _num_classes):
     all_scores = np.vstack((all_scores, zeros))
 
   num_images = 1
-  rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images
+  rois_per_image = cfg.TRAIN.BATCH_SIZE / num_images          #每张图的roi定为128
   fg_rois_per_image = np.round(cfg.TRAIN.FG_FRACTION * rois_per_image)
 
   # Sample rois with classification labels and bounding box regression
@@ -55,7 +55,7 @@ def proposal_target_layer(rpn_rois, rpn_scores, gt_boxes, _num_classes):
   return rois, roi_scores, labels, bbox_targets, bbox_inside_weights, bbox_outside_weights
 
 
-def _get_bbox_regression_labels(bbox_target_data, num_classes):
+def _get_bbox_regression_labels(bbox_target_data, num_classes):       #主要就转个格式，把每个box的位置偏移参数放到了他对应的类的位置
   """Bounding-box regression targets (bbox_target_data) are stored in a
   compact form N x (class, tx, ty, tw, th)
 
@@ -103,13 +103,13 @@ def _sample_rois(all_rois, all_scores, gt_boxes, fg_rois_per_image, rois_per_ima
   # overlaps: (rois x gt_boxes)
   overlaps = bbox_overlaps(
     np.ascontiguousarray(all_rois[:, 1:5], dtype=np.float),
-    np.ascontiguousarray(gt_boxes[:, :4], dtype=np.float))
-  gt_assignment = overlaps.argmax(axis=1)
+    np.ascontiguousarray(gt_boxes[:, :4], dtype=np.float))          #计算所有的网络算出来的结果的roi与gt的交并比
+  gt_assignment = overlaps.argmax(axis=1)           #找到每个roi最接近的gt
   max_overlaps = overlaps.max(axis=1)
-  labels = gt_boxes[gt_assignment, 4]
+  labels = gt_boxes[gt_assignment, 4]              #每个roi最接近的gt的类别
 
   # Select foreground RoIs as those with >= FG_THRESH overlap
-  fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]
+  fg_inds = np.where(max_overlaps >= cfg.TRAIN.FG_THRESH)[0]      #对交并比进行筛选，一定范围内的作为前景，一定范围内的作为背景
   # Guard against the case when an image has fewer than fg_rois_per_image
   # Select background RoIs as those within [BG_THRESH_LO, BG_THRESH_HI)
   bg_inds = np.where((max_overlaps < cfg.TRAIN.BG_THRESH_HI) &
@@ -139,8 +139,8 @@ def _sample_rois(all_rois, all_scores, gt_boxes, fg_rois_per_image, rois_per_ima
   # Select sampled values from various arrays:
   labels = labels[keep_inds]
   # Clamp labels for the background RoIs to 0
-  labels[int(fg_rois_per_image):] = 0
-  rois = all_rois[keep_inds]
+  labels[int(fg_rois_per_image):] = 0          #要求前景的数目是125*0.25，后面的都置为背景
+  rois = all_rois[keep_inds]              #筛选出来的roi和分数
   roi_scores = all_scores[keep_inds]
 
   bbox_target_data = _compute_targets(
@@ -149,4 +149,4 @@ def _sample_rois(all_rois, all_scores, gt_boxes, fg_rois_per_image, rois_per_ima
   bbox_targets, bbox_inside_weights = \
     _get_bbox_regression_labels(bbox_target_data, num_classes)
 
-  return labels, rois, roi_scores, bbox_targets, bbox_inside_weights
+  return labels, rois, roi_scores, bbox_targets, bbox_inside_weights    #输出的是label是结果筛选的
