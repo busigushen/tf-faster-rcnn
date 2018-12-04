@@ -289,8 +289,8 @@ class Network(object):
         tf.nn.sparse_softmax_cross_entropy_with_logits(logits=rpn_cls_score, labels=rpn_label))
 
       # RPN, bbox loss
-      rpn_bbox_pred = self._predictions['rpn_bbox_pred']
-      rpn_bbox_targets = self._anchor_targets['rpn_bbox_targets']
+      rpn_bbox_pred = self._predictions['rpn_bbox_pred']       #最后一维36       
+      rpn_bbox_targets = self._anchor_targets['rpn_bbox_targets']#最后一维36,每个位置9个anchor
       rpn_bbox_inside_weights = self._anchor_targets['rpn_bbox_inside_weights']
       rpn_bbox_outside_weights = self._anchor_targets['rpn_bbox_outside_weights']
       rpn_loss_box = self._smooth_l1_loss(rpn_bbox_pred, rpn_bbox_targets, rpn_bbox_inside_weights,
@@ -303,7 +303,7 @@ class Network(object):
 
       # RCNN, bbox loss
       bbox_pred = self._predictions['bbox_pred']
-      bbox_targets = self._proposal_targets['bbox_targets']
+      bbox_targets = self._proposal_targets['bbox_targets']      #最后一维21×4，有21类
       bbox_inside_weights = self._proposal_targets['bbox_inside_weights']
       bbox_outside_weights = self._proposal_targets['bbox_outside_weights']
       loss_box = self._smooth_l1_loss(bbox_pred, bbox_targets, bbox_inside_weights, bbox_outside_weights)
