@@ -142,12 +142,12 @@ class Network(object):
     with tf.variable_scope(name) as scope:
       batch_ids = tf.squeeze(tf.slice(rois, [0, 0], [-1, 1], name="batch_id"), [1])
       # Get the normalized coordinates of bounding boxes
-      bottom_shape = tf.shape(bottom)
-      height = (tf.to_float(bottom_shape[1]) - 1.) * np.float32(self._feat_stride[0])
-      width = (tf.to_float(bottom_shape[2]) - 1.) * np.float32(self._feat_stride[0])
-      x1 = tf.slice(rois, [0, 1], [-1, 1], name="x1") / width
+      bottom_shape = tf.shape(bottom)         #卷积层输出的维度
+      height = (tf.to_float(bottom_shape[1]) - 1.) * np.float32(self._feat_stride[0]) #换算出原始图像的高
+      width = (tf.to_float(bottom_shape[2]) - 1.) * np.float32(self._feat_stride[0])  #原始图像的宽
+      x1 = tf.slice(rois, [0, 1], [-1, 1], name="x1") / width          #rois在原图中的位置，左上角的横纵坐标
       y1 = tf.slice(rois, [0, 2], [-1, 1], name="y1") / height
-      x2 = tf.slice(rois, [0, 3], [-1, 1], name="x2") / width
+      x2 = tf.slice(rois, [0, 3], [-1, 1], name="x2") / width           #右下角的横纵坐标
       y2 = tf.slice(rois, [0, 4], [-1, 1], name="y2") / height
       # Won't be back-propagated to rois anyway, but to save time
       bboxes = tf.stop_gradient(tf.concat([y1, x1, y2, x2], axis=1))
@@ -248,11 +248,11 @@ class Network(object):
       rois = self._region_proposal(net_conv, is_training, initializer)
       # region of interest pooling
       if cfg.POOLING_MODE == 'crop':
-        pool5 = self._crop_pool_layer(net_conv, rois, "pool5")
+        pool5 = self._crop_pool_layer(net_conv, rois, "pool5")       #这里根据rois对每张图提取了多个区域，进行resize
       else:
         raise NotImplementedError
 
-    fc7 = self._head_to_tail(pool5, is_training)
+    fc7 = self._head_to_tail(pool5, is_training)      #全连接层，这里第一维不是1,是每张图的crop数
     with tf.variable_scope(self._scope, self._scope):
       # region classification
       cls_prob, bbox_pred = self._region_classification(fc7, is_training, 
@@ -427,7 +427,7 @@ class Network(object):
       self._train_summaries.append(var)
 
     if testing:
-      stds = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self._num_classes))        #np.tile用来复制数组
+      stds = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_STDS), (self._num_classes))        #np.tile用来复制数组4*21维的向量，每个类都有输出
       means = np.tile(np.array(cfg.TRAIN.BBOX_NORMALIZE_MEANS), (self._num_classes))
       self._predictions["bbox_pred"] *= stds
       self._predictions["bbox_pred"] += means
